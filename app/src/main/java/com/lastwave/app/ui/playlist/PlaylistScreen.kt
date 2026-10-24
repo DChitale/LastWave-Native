@@ -13,6 +13,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import com.lastwave.app.ui.tv.focus.tvFocusHighlight
+import com.lastwave.app.ui.tv.focus.tvAdaptiveFocus
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -626,6 +627,7 @@ private fun PlaylistCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .tvAdaptiveFocus(shape = com.lastwave.app.ui.common.groupShape(position))
                 .combinedClickable(
                     interactionSource = interactionSource,
                     indication = null,
@@ -708,6 +710,7 @@ private fun PlaylistCard(
                     interactionSource = playInteractionSource,
                     modifier = Modifier
                         .size(38.dp)
+                        .tvAdaptiveFocus(shape = CircleShape)
                         .graphicsLayer {
                             scaleX = playScale
                             scaleY = playScale
@@ -852,7 +855,9 @@ private fun FormatOptionRow(title: String, description: String, selected: Boolea
         onClick = onClick,
         shape = RoundedCornerShape(14.dp),
         color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .tvAdaptiveFocus(shape = RoundedCornerShape(14.dp)),
     ) {
         Row(Modifier.padding(14.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {

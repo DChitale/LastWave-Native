@@ -188,6 +188,18 @@ data class PlaybackProgressState(
 )
 
 /**
+ * Queue shape without any ticking fields, for surfaces that only need to
+ * render the queue/list position/repeat mode (the TV player overlay).
+ * Collecting [MusicPlayerState] there invalidated the whole overlay at the
+ * 500 ms position-tick rate for nothing.
+ */
+data class QueueChromeState(
+    val queue: List<PlayableTrack> = emptyList(),
+    val currentIndex: Int = -1,
+    val repeatMode: Int = Player.REPEAT_MODE_OFF,
+)
+
+/**
  * Process-wide native ExoPlayer engine. A foreground service publishes its
  * platform MediaSession/notification while this object owns the actual
  * queue, ensuring the app UI and system controls always operate on the same
@@ -216,6 +228,25 @@ class MusicPlayer @Inject constructor(
     private val internalDirectOutput: InternalDirectOutput,
 ) {
     private val appContext = context.applicationContext
+    /**
+     * TV boxes and ≤2 GB devices. Everything keyed off this flag trades
+     * audiophile headroom (FFmpeg-first decode, 120 s buffers, crossfade
+     * pre-arm) for UI smoothness: a full-time software decode plus the native
+     * DSP chain starves the render threads on weak SoCs, which is what reads
+     * as "the app lags" on low-end TVs.
+     */
+    private val isLowPowerDevice: Boolean by lazy {
+        val isTv = runCatching {
+            com.lastwave.app.util.TvDetector.detectIsTv(appContext)
+        }.getOrDefault(false)
+        val totalRamMb = runCatching {
+            val manager = appContext.getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+            val info = android.app.ActivityManager.MemoryInfo()
+            manager?.getMemoryInfo(info)
+            info.totalMem / (1024L * 1024L)
+        }.getOrDefault(4096L)
+        isTv || totalRamMb <= 2048L
+    }
     /**
      * Playback resolver is the only path allowed to publish a YouTube URL for
      * the selected track. Prefetch may fill the next track's cache entry and
@@ -443,6 +474,10 @@ class MusicPlayer @Inject constructor(
         }
         .distinctUntilChanged()
         .stateIn(applicationScope, SharingStarted.Eagerly, PlaybackProgressState())
+    val queueChromeState: StateFlow<QueueChromeState> = state
+        .map { QueueChromeState(queue = it.queue, currentIndex = it.currentIndex, repeatMode = it.repeatMode) }
+        .distinctUntilChanged()
+        .stateIn(applicationScope, SharingStarted.Eagerly, QueueChromeState())
 
     private var errorRetryCount = 0
     private var retryMediaId: String? = null
@@ -1155,8 +1190,11 @@ class MusicPlayer @Inject constructor(
         }
         val baseLoadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(
-                /* minBufferMs = */ if (handleAudioFocus) 45_000 else 15_000,
-                /* maxBufferMs = */ if (handleAudioFocus) 120_000 else 30_000,
+                // 120 s of decoded-ahead audio only on capable devices; on
+                // TV/low-RAM boxes 30 s keeps the same playback safety margin
+                // without the heap/GC pressure that stutters navigation.
+                /* minBufferMs = */ if (handleAudioFocus && !isLowPowerDevice) 45_000 else 15_000,
+                /* maxBufferMs = */ if (handleAudioFocus && !isLowPowerDevice) 120_000 else 30_000,
                 /* bufferForPlaybackMs = */ if (handleAudioFocus) 250 else 1_500,
                 /* bufferForPlaybackAfterRebufferMs = */ if (handleAudioFocus) 750 else 2_500,
             )
@@ -1313,13 +1351,22 @@ class MusicPlayer @Inject constructor(
                 )
             }
         }.apply {
-            // FFmpeg-first decoding, the Poweramp/VLC model: every codec the
-            // bundled GPL build supports (FLAC 24/96-192, Opus, AAC, MP3,
-            // Vorbis) decodes through the same battle-tested software path on
-            // every device, eliminating per-OEM platform codec bugs that
-            // surface as noise/distortion. setEnableDecoderFallback keeps the
-            // platform decoder for anything FFmpeg rejects.
-            setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+            // On capable phones: FFmpeg-first decoding, the Poweramp/VLC model
+            // — every codec the bundled GPL build supports (FLAC 24/96-192,
+            // Opus, AAC, MP3, Vorbis) decodes through the same battle-tested
+            // software path, eliminating per-OEM platform codec bugs that
+            // surface as noise/distortion. On TV/low-RAM devices the platform
+            // hardware decoder wins instead: a full-time software decode plus
+            // the native DSP chain is constant CPU burn that starves the UI
+            // threads on weak SoCs. setEnableDecoderFallback keeps FFmpeg
+            // available either way for anything the platform rejects.
+            setExtensionRendererMode(
+                if (isLowPowerDevice) {
+                    DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON
+                } else {
+                    DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER
+                },
+            )
             setEnableDecoderFallback(true)
             setEnableAudioTrackPlaybackParams(false)
             setMediaCodecSelector(accurateAudioMediaCodecSelector)
@@ -2751,6 +2798,13 @@ class MusicPlayer @Inject constructor(
      */
     @MainThread
     private fun armCrossfadeStandby(nextIndex: Int, nextItem: MediaItem) {
+        if (isLowPowerDevice) {
+            // A second armed decoder + DSP chain is exactly the CPU spike
+            // that stutters navigation on low-end boxes; the queue falls back
+            // to a normal end-of-item transition there.
+            logCrossfadeDecision("skipped", "low-power device keeps a single decoder")
+            return
+        }
         val standby = standbyOrCreate()
         standbyQueue = (0 until player.mediaItemCount).map(player::getMediaItemAt)
         standbyIndex = nextIndex

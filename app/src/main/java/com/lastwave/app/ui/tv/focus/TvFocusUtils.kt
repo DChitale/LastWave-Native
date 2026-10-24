@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.lastwave.app.util.LocalIsTv
 
 /**
  * Hardware-accelerated modifier that applies a smooth D-pad focus highlight:
@@ -71,6 +72,29 @@ fun Modifier.tvFocusHighlight(
             color = animatedBorderColor,
             shape = shape,
         )
+}
+
+/**
+ * Focus highlight for composables shared by the phone and TV UIs: renders
+ * [tvFocusHighlight] only when composed under the TV tree ([LocalIsTv]),
+ * and is a plain pass-through on phone. This is what gives the phone screens
+ * reused by TvNavHost a visible D-pad focus — without it every remote press
+ * moves an invisible focus and the screen reads as broken on TV.
+ */
+@Composable
+fun Modifier.tvAdaptiveFocus(
+    scale: Float = 1.02f,
+    borderColor: Color? = null,
+    borderWidth: Dp = 2.dp,
+    shape: Shape = RoundedCornerShape(12.dp),
+): Modifier {
+    if (!LocalIsTv.current) return this
+    return tvFocusHighlight(
+        scale = scale,
+        borderColor = borderColor,
+        borderWidth = borderWidth,
+        shape = shape,
+    )
 }
 
 /**

@@ -92,6 +92,7 @@ import com.lastwave.app.ui.common.adaptiveContentWidth
 import com.lastwave.app.ui.player.LocalMiniPlayerScrollClearance
 import com.lastwave.app.ui.player.LocalMusicPlayer
 import com.lastwave.app.ui.player.PlayingWaveBars
+import com.lastwave.app.ui.tv.focus.tvAdaptiveFocus
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -271,6 +272,7 @@ fun AlbumDetailScreen(
                                         },
                                         shape = RoundedCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                                        modifier = Modifier.tvAdaptiveFocus(),
                                     ) {
                                         Text(
                                             text = artName,
@@ -449,6 +451,7 @@ fun AlbumDetailScreen(
                             else MaterialTheme.colorScheme.surfaceContainerLow,
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .tvAdaptiveFocus(shape = RoundedCornerShape(16.dp))
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     viewModel.playAll(startIndex = index)
@@ -684,7 +687,9 @@ private fun AlbumCard(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        modifier = Modifier.width(150.dp),
+        modifier = Modifier
+            .width(150.dp)
+            .tvAdaptiveFocus(scale = 1.04f, shape = RoundedCornerShape(20.dp)),
     ) {
         Column(Modifier.padding(10.dp)) {
             Box(

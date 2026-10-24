@@ -116,6 +116,7 @@ import com.lastwave.app.ui.player.LocalMusicPlayer
 import com.lastwave.app.ui.player.PlayingWaveBars
 import com.lastwave.app.ui.shell.FloatingNavDefaults
 import com.lastwave.app.ui.theme.ArtworkShape
+import com.lastwave.app.ui.tv.focus.tvAdaptiveFocus
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -987,6 +988,7 @@ private fun FolderOrganizationDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
+                            .tvAdaptiveFocus()
                             .clickable { onStructureChange(structure) }
                             .padding(vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -1089,7 +1091,8 @@ private fun DownloadTabBar(
                     color = bgColor,
                     modifier = Modifier
                         .weight(1f)
-                        .height(38.dp),
+                        .height(38.dp)
+                        .tvAdaptiveFocus(shape = RoundedCornerShape(16.dp)),
                 ) {
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         Text(
@@ -1264,18 +1267,21 @@ private fun DownloadFilterControls(
                         if (filterLyrics) onToggleLyrics()
                     },
                     label = { Text("All") },
+                    modifier = Modifier.tvAdaptiveFocus(),
                     shape = RoundedCornerShape(12.dp),
                 )
                 FilterChip(
                     selected = filterLossless,
                     onClick = onToggleLossless,
                     label = { Text("Lossless / FLAC") },
+                    modifier = Modifier.tvAdaptiveFocus(),
                     shape = RoundedCornerShape(12.dp),
                 )
                 FilterChip(
                     selected = filterLyrics,
                     onClick = onToggleLyrics,
                     label = { Text("With Lyrics (LRC)") },
+                    modifier = Modifier.tvAdaptiveFocus(),
                     shape = RoundedCornerShape(12.dp),
                 )
             }
@@ -1571,6 +1577,7 @@ private fun DownloadedArtistsList(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .tvAdaptiveFocus(shape = groupShape(groupPositionFor(index, artists.size)))
                         .clickable { onSelectArtist(artist) },
                 ) {
                     Row(
@@ -1617,7 +1624,7 @@ private fun DownloadedArtistsList(
                             },
                             shape = CircleShape,
                             color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = Modifier.size(36.dp),
+                            modifier = Modifier.tvAdaptiveFocus(shape = CircleShape).size(36.dp),
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
@@ -1722,6 +1729,7 @@ private fun DownloadedAlbumsList(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .tvAdaptiveFocus(shape = groupShape(groupPositionFor(index, albums.size)))
                         .clickable { onSelectAlbum(album) },
                 ) {
                     Row(
@@ -1769,7 +1777,7 @@ private fun DownloadedAlbumsList(
                             },
                             shape = CircleShape,
                             color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = Modifier.size(36.dp),
+                            modifier = Modifier.tvAdaptiveFocus(shape = CircleShape).size(36.dp),
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
@@ -1943,6 +1951,7 @@ private fun ArtistDetailView(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
                             modifier = Modifier
                                 .width(130.dp)
+                                .tvAdaptiveFocus(shape = RoundedCornerShape(16.dp))
                                 .clickable { onSelectAlbum(album.title) },
                         ) {
                             Column(Modifier.padding(8.dp)) {
@@ -2228,7 +2237,7 @@ private fun ActiveDownloadCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                IconButton(onClick = onCancel, modifier = Modifier.size(32.dp)) {
+                IconButton(onClick = onCancel, modifier = Modifier.tvAdaptiveFocus().size(32.dp)) {
                     Icon(Icons.Filled.Close, contentDescription = "Cancel download", tint = MaterialTheme.colorScheme.error)
                 }
             }
@@ -2268,6 +2277,7 @@ private fun DownloadedTrackCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .tvAdaptiveFocus(shape = groupShape(position))
                 .combinedClickable(onClick = onPlay, onLongClick = { menuExpanded = true })
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -2394,7 +2404,7 @@ private fun DownloadedTrackCard(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(36.dp),
+                modifier = Modifier.tvAdaptiveFocus(shape = CircleShape).size(36.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
@@ -2411,7 +2421,7 @@ private fun DownloadedTrackCard(
             Box {
                 IconButton(
                     onClick = { menuExpanded = true },
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier.tvAdaptiveFocus().size(36.dp),
                 ) {
                     Icon(
                         Icons.Filled.MoreVert,

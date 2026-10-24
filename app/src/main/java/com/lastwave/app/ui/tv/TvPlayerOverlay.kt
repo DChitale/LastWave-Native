@@ -101,7 +101,9 @@ fun TvPlayerOverlay(
     viewModel: PlayerViewModel = hiltViewModel(),
 ) {
     val chromeState by viewModel.chromeState.collectAsStateWithLifecycle()
-    val playerState by viewModel.player.state.collectAsStateWithLifecycle()
+    // Queue slice only: the full MusicPlayerState carries a 500 ms position
+    // ticker that invalidated this entire overlay twice a second.
+    val queueState by viewModel.player.queueChromeState.collectAsStateWithLifecycle()
     val progressState by viewModel.progressState.collectAsStateWithLifecycle()
     val lyricsState by viewModel.lyricsState.collectAsStateWithLifecycle()
 
@@ -167,8 +169,8 @@ fun TvPlayerOverlay(
                     ) {
                         TvPlayerTab.entries.forEach { tab ->
                             val isSelected = activeTab == tab
-                            val badgeCount = if (tab == TvPlayerTab.QUEUE && playerState.queue.isNotEmpty()) {
-                                " (${playerState.queue.size})"
+                            val badgeCount = if (tab == TvPlayerTab.QUEUE && queueState.queue.isNotEmpty()) {
+                                " (${queueState.queue.size})"
                             } else ""
                             TvTabButton(
                                 label = "${tab.label}$badgeCount",
@@ -203,8 +205,8 @@ fun TvPlayerOverlay(
                         TvPlayerTab.QUEUE -> {
                             TvQueueMiddle(
                                 currentTrack = track,
-                                queue = playerState.queue,
-                                currentIndex = playerState.currentIndex,
+                                queue = queueState.queue,
+                                currentIndex = queueState.currentIndex,
                                 focusRequester = middleContentRequester,
                                 topRequester = topTabsRequester,
                                 bottomRequester = playFocusRequester,
@@ -374,7 +376,7 @@ fun TvPlayerOverlay(
                         Spacer(modifier = Modifier.width(16.dp))
 
                         // Repeat
-                        val repeatMode = playerState.repeatMode
+                        val repeatMode = queueState.repeatMode
                         val repeatIcon = if (repeatMode == Player.REPEAT_MODE_ONE) Icons.Default.RepeatOne else Icons.Default.Repeat
                         val isRepeatActive = repeatMode != Player.REPEAT_MODE_OFF
                         TvTransportButton(

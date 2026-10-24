@@ -42,23 +42,39 @@ object ArtworkNormalizer {
 
     private val YT_SIZE_REGEX = Regex("""=w\d+-h\d+[^?#]*|=s\d+[^?#]*""")
 
+    /** Master-resolution target kept for hero/now-playing/notification art. */
+    private const val HIGH_RES_TARGET_PX = 1200
+
     /**
      * Upscales YouTube / Googleusercontent thumbnails from compressed low-res
-     * dimensions (e.g. w120-h120 or s544) to high-resolution master dimensions (s1200 or maxresdefault).
+     * dimensions (e.g. w120-h120 or s544) toward [targetPx].
+     *
+     * googleusercontent serves any `=sNN` size server-side, so the exact
+     * target is requested (clamped to the 120..1200 range the CDN reliably
+     * serves). i.ytimg.com only has fixed tiers, so the smallest one that
+     * covers the target wins: mqdefault (320) -> hqdefault (480) ->
+     * maxresdefault. List thumbnails must pass a small target — requesting
+     * s1200/maxres masters for 48 dp rows meant a 150-400 KB download per
+     * thumb, slow first paint and disk-cache thrash on TV.
      */
-    fun upscaleYoutubeArtwork(url: String?): String? {
+    fun upscaleYoutubeArtwork(url: String?, targetPx: Int = HIGH_RES_TARGET_PX): String? {
         if (url.isNullOrBlank()) return null
         if (!isRealImage(url)) return url
         var result = url
         if (result.contains("googleusercontent.com") || result.contains("ggpht.com")) {
+            val target = targetPx.coerceIn(120, 1200)
             result = if (YT_SIZE_REGEX.containsMatchIn(result)) {
-                result.replace(YT_SIZE_REGEX, "=s1200")
+                result.replace(YT_SIZE_REGEX, "=s" + target)
             } else {
-                "$result=s1200"
+                result + "=s" + target
             }
         } else if (result.contains("i.ytimg.com/vi/")) {
-            result = result.replace("/hqdefault.jpg", "/maxresdefault.jpg")
-                .replace("/sddefault.jpg", "/maxresdefault.jpg")
+            val tiered = when {
+                targetPx <= 360 -> "mqdefault"
+                targetPx <= 720 -> "hqdefault"
+                else -> "maxresdefault"
+            }
+            result = result.replace(Regex("/(mq|hq|sd|maxres)?default\\.(jpg|webp)"), "/" + tiered + "default.jpg")
         }
         return result
     }

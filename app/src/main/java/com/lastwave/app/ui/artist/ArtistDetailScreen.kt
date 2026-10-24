@@ -102,6 +102,7 @@ import com.lastwave.app.ui.genres.GenreExplorer
 import com.lastwave.app.ui.player.LocalMiniPlayerScrollClearance
 import com.lastwave.app.ui.player.LocalMusicPlayer
 import com.lastwave.app.ui.player.PlayingWaveBars
+import com.lastwave.app.ui.tv.focus.tvAdaptiveFocus
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -425,6 +426,7 @@ fun ArtistDetailScreen(
                                                 colors = AssistChipDefaults.assistChipColors(
                                                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                                                 ),
+                                                modifier = Modifier.tvAdaptiveFocus(),
                                             )
                                         }
                                     }
@@ -462,6 +464,7 @@ fun ArtistDetailScreen(
                                                     color = MaterialTheme.colorScheme.primary,
                                                     modifier = Modifier
                                                         .clip(RoundedCornerShape(8.dp))
+                                                        .tvAdaptiveFocus(shape = RoundedCornerShape(8.dp))
                                                         .clickable {
                                                             isBioExpanded = !isBioExpanded
                                                         }
@@ -516,6 +519,7 @@ fun ArtistDetailScreen(
                                 else MaterialTheme.colorScheme.surfaceContainerLow,
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .tvAdaptiveFocus(shape = RoundedCornerShape(16.dp))
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         val fullIndex = data.topSongs.indexOf(track).takeIf { it >= 0 } ?: index
@@ -606,6 +610,7 @@ fun ArtistDetailScreen(
                                         },
                                         shape = RoundedCornerShape(24.dp),
                                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                        modifier = Modifier.tvAdaptiveFocus(shape = RoundedCornerShape(24.dp)),
                                     ) {
                                         Row(
                                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
@@ -820,7 +825,9 @@ private fun ArtistAlbumCard(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        modifier = Modifier.width(150.dp),
+        modifier = Modifier
+            .width(150.dp)
+            .tvAdaptiveFocus(scale = 1.04f, shape = RoundedCornerShape(20.dp)),
     ) {
         Column(Modifier.padding(10.dp)) {
             Box(
@@ -882,7 +889,9 @@ private fun SimilarArtistCard(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        modifier = Modifier.width(130.dp),
+        modifier = Modifier
+            .width(130.dp)
+            .tvAdaptiveFocus(scale = 1.04f, shape = RoundedCornerShape(20.dp)),
     ) {
         Column(
             modifier = Modifier.padding(10.dp),

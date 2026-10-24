@@ -71,7 +71,7 @@ class LastWaveApplication : Application(), ImageLoaderFactory {
             runCatching { innerTubeMusicApi.get().preWarmPlayback() }
         }
         applicationScope.launch(Dispatchers.IO) {
-            delay(OPTIONAL_STARTUP_DELAY_MS)
+            delay(optionalStartupDelayMs)
             // A process kill can bypass TrackDownloadManager's finally block
             // and strand a full lossless track in cache. Remove only old temp
             // files so cleanup cannot race a newly started download.
@@ -100,7 +100,7 @@ class LastWaveApplication : Application(), ImageLoaderFactory {
         // YouTube Music playlist sync heartbeat (no-ops until an account is
         // connected AND sync is enabled in Settings).
         applicationScope.launch {
-            delay(OPTIONAL_STARTUP_DELAY_MS)
+            delay(optionalStartupDelayMs)
             runCatching { ytMusicSyncManager.get().start() }
                 .onFailure { com.lastwave.app.diagnostics.AppLog.e("LastWaveStartup", "YT sync startup disabled", it) }
         }
@@ -108,14 +108,14 @@ class LastWaveApplication : Application(), ImageLoaderFactory {
         // connected AND history sync is enabled in Settings — on by default).
         // Observes playback state only; it can never affect audio delivery.
         applicationScope.launch {
-            delay(OPTIONAL_STARTUP_DELAY_MS)
+            delay(optionalStartupDelayMs)
             runCatching { ytMusicHistorySyncManager.get().start() }
                 .onFailure { com.lastwave.app.diagnostics.AppLog.e("LastWaveStartup", "YT history sync startup disabled", it) }
         }
         // Reconcile public download directory & MediaStore with local database
         // asynchronously on startup so offline playback works immediately.
         applicationScope.launch(Dispatchers.IO) {
-            delay(OPTIONAL_STARTUP_DELAY_MS)
+            delay(optionalStartupDelayMs)
             runCatching { trackDownloadManager.get().syncDownloadsFromStorage() }
                 .onFailure { com.lastwave.app.diagnostics.AppLog.e("LastWaveStartup", "Download sync startup failed", it) }
         }
@@ -124,7 +124,7 @@ class LastWaveApplication : Application(), ImageLoaderFactory {
         // never affect audio delivery, and every failure stays contained here so
         // a missing Discord install cannot reach startup.
         applicationScope.launch {
-            delay(OPTIONAL_STARTUP_DELAY_MS)
+            delay(optionalStartupDelayMs)
             runCatching { discordPresenceManager.get().start() }
                 .onFailure { com.lastwave.app.diagnostics.AppLog.e("LastWaveStartup", "Discord presence startup disabled", it) }
         }
@@ -134,7 +134,7 @@ class LastWaveApplication : Application(), ImageLoaderFactory {
         // dedupe on those — otherwise ANY DataStore settings change (pins,
         // toggles, font) rebuilt every placed widget.
         applicationScope.launch(Dispatchers.IO) {
-            delay(OPTIONAL_STARTUP_DELAY_MS)
+            delay(optionalStartupDelayMs)
             try {
                 themeRepository.get().uiState
                     .map { it.colorScheme.primary to it.colorScheme.onPrimary }
@@ -164,10 +164,19 @@ class LastWaveApplication : Application(), ImageLoaderFactory {
      *  - Hardware acceleration enabled for fast GPU texture uploading.
      */
     override fun newImageLoader(): ImageLoader {
+        // TvDetector also accepts UI_MODE_TYPE_TELEVISION and the legacy
+        // FEATURE_TELEVISION flag; FEATURE_LEANBACK alone missed boxes the
+        // rest of the app already treats as TV, silently giving them the
+        // full-fat loader config (hardware bitmaps, ARGB_8888, 8 req/host).
         val isTv = runCatching {
-            packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_LEANBACK)
+            com.lastwave.app.util.TvDetector.detectIsTv(this)
         }.getOrDefault(false)
-        val lowRamDevice = isTv || runCatching {
+        val totalRamMb = runCatching {
+            val info = ActivityManager.MemoryInfo()
+            (getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager)?.getMemoryInfo(info)
+            info.totalMem / (1024L * 1024L)
+        }.getOrDefault(4096L)
+        val lowRamDevice = isTv || totalRamMb <= 2048L || runCatching {
             (getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager)?.isLowRamDevice == true
         }.getOrDefault(false)
         val imageClient = try {
@@ -217,5 +226,21 @@ class LastWaveApplication : Application(), ImageLoaderFactory {
         const val LOW_RAM_IMAGE_DISK_CACHE_BYTES = 16L * 1024 * 1024
         const val ORPHAN_TEMP_MAX_AGE_MS = 6L * 60 * 60 * 1000
         const val OPTIONAL_STARTUP_DELAY_MS = 2_500L
+        // Weak CPUs and radios need the cold-start window clear: while the
+        // user is scrolling the fresh home screen is the worst moment to also
+        // run sync/reconciliation jobs.
+        const val LOW_RAM_OPTIONAL_STARTUP_DELAY_MS = 10_000L
+    }
+
+    private val optionalStartupDelayMs: Long by lazy {
+        val isTv = runCatching {
+            com.lastwave.app.util.TvDetector.detectIsTv(this)
+        }.getOrDefault(false)
+        val totalRamMb = runCatching {
+            val info = ActivityManager.MemoryInfo()
+            (getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager)?.getMemoryInfo(info)
+            info.totalMem / (1024L * 1024L)
+        }.getOrDefault(4096L)
+        if (isTv || totalRamMb <= 2048L) LOW_RAM_OPTIONAL_STARTUP_DELAY_MS else OPTIONAL_STARTUP_DELAY_MS
     }
 }

@@ -190,7 +190,12 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
 
     override fun onResume() {
         super.onResume()
-        requestHighestSupportedRefreshRate()
+        // Cheap TV panels/SoCs often advertise modes they cannot sustain
+        // while compositing this UI; forcing the top mode there lowers
+        // effective smoothness instead of raising it.
+        if (!isTvDevice) {
+            requestHighestSupportedRefreshRate()
+        }
     }
 
     /**

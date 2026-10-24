@@ -36,7 +36,15 @@ fun TvAppRoot(
             navController = navController,
             playerViewModel = viewModel,
         ) {
-            TvNavHost(navController = navController)
+            // The TV-native screens install their own tuned specs inside; this
+            // outer default is what the reused phone screens (settings,
+            // downloads, playlist/album/artist detail) inherit so D-pad focus
+            // scrolls them smoothly instead of rubber-banding at the edges.
+            com.lastwave.app.ui.tv.focus.PositionFocusedItemInLazyLayout(
+                parentFraction = 0.2f,
+            ) {
+                TvNavHost(navController = navController)
+            }
         }
     }
 }

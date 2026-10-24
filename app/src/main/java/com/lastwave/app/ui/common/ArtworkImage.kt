@@ -87,7 +87,11 @@ fun ArtworkImage(
     } else if (useHighRes) {
         highResUrl
     } else if (ArtworkNormalizer.isRealImage(embeddedUrl) && !embeddedFailed) {
-        ArtworkNormalizer.upscaleYoutubeArtwork(embeddedUrl)
+        // Thumbnail tier: this component only renders list-sized artwork, so
+        // ask the CDN for a 544 px image instead of the s1200/maxres master
+        // (a 150-400 KB download for a 48 dp view that thrashes the small TV
+        // disk cache). Heroes/notifications keep their own hi-res calls.
+        ArtworkNormalizer.upscaleYoutubeArtwork(embeddedUrl, decodeSizePx ?: DEFAULT_THUMBNAIL_TARGET_PX)
     } else {
         null
     }
@@ -128,3 +132,6 @@ fun ArtworkImage(
         }
     }
 }
+
+/** CDN size requested for list thumbnails when no explicit [ArtworkImage.decodeSizePx] is given. */
+private const val DEFAULT_THUMBNAIL_TARGET_PX = 544

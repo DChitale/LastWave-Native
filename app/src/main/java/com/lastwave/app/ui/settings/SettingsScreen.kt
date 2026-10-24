@@ -220,6 +220,7 @@ import com.lastwave.app.ui.common.safeDrawingBottomPadding
 import com.lastwave.app.ui.common.safeHorizontalContentPadding
 import com.lastwave.app.ui.common.adaptiveContentWidth
 import com.lastwave.app.ui.theme.ExpressivePillShape
+import com.lastwave.app.ui.tv.focus.tvAdaptiveFocus
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.DarkMode
@@ -1801,6 +1802,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(CardOuterShape)
+                                .tvAdaptiveFocus(shape = CardOuterShape)
                                 .clickable { viewModel.openUpdate(context) },
                         ) {
                             Row(
@@ -1966,6 +1968,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(14.dp))
+                                .tvAdaptiveFocus(shape = RoundedCornerShape(14.dp))
                                 .clickable {
                                     viewModel.setAppLanguage(language)
                                     showLanguageDialog = false
@@ -2257,7 +2260,9 @@ fun SettingsScreen(
                             color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
                             border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
                             shadowElevation = if (isSelected) 3.dp else 0.dp,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .tvAdaptiveFocus(shape = RoundedCornerShape(20.dp)),
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
@@ -2408,7 +2413,9 @@ fun SettingsScreen(
                             color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
                             border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
                             shadowElevation = if (isSelected) 3.dp else 0.dp,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .tvAdaptiveFocus(shape = RoundedCornerShape(20.dp)),
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
@@ -2566,6 +2573,7 @@ private fun ThemeModeSelectorCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .tvAdaptiveFocus(shape = shape)
             .settingHighlightGlow(isHighlighted = isHighlighted, shape = shape),
     ) {
         Column(
@@ -2647,6 +2655,7 @@ private fun SettingsToggleCard(
         interactionSource = interactionSource,
         modifier = Modifier
             .fillMaxWidth()
+            .tvAdaptiveFocus(shape = shape)
             .scale(if (enabled) scale else 1f)
             .settingHighlightGlow(isHighlighted = isHighlighted, shape = shape),
     ) {
@@ -2728,6 +2737,7 @@ private fun CrossfadeDurationRow(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .tvAdaptiveFocus(shape = shape)
             .settingHighlightGlow(isHighlighted = isHighlighted, shape = shape),
     ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
@@ -2818,6 +2828,7 @@ private fun SettingsActionCard(
         interactionSource = interactionSource,
         modifier = Modifier
             .fillMaxWidth()
+            .tvAdaptiveFocus(shape = shape)
             .scale(scale)
             .settingHighlightGlow(isHighlighted = isHighlighted, shape = shape),
     ) {
@@ -3007,6 +3018,7 @@ private fun SearchResultCard(
         interactionSource = interactionSource,
         modifier = Modifier
             .fillMaxWidth()
+            .tvAdaptiveFocus(shape = CardOuterShape)
             .scale(scale),
     ) {
         Column(
@@ -3128,6 +3140,7 @@ private fun YouTubeAccountRow(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .tvAdaptiveFocus(shape = shape)
             .animateContentSize()
             .settingHighlightGlow(isHighlighted = isHighlighted, shape = shape),
     ) {
@@ -3225,6 +3238,7 @@ private fun LastFmIntegrationCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .tvAdaptiveFocus(shape = CardOuterShape)
             .animateContentSize()
             .settingHighlightGlow(isHighlighted = isHighlighted, shape = CardOuterShape),
     ) {
@@ -3598,7 +3612,7 @@ private fun ColorTile(
     val tileShape = RoundedCornerShape(20.dp)
 
     Column(
-        modifier = modifier.scale(scale),
+        modifier = modifier.tvAdaptiveFocus(shape = tileShape).scale(scale),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
@@ -4055,7 +4069,9 @@ private fun EqualizerSheet(
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 tonalElevation = 2.dp,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .tvAdaptiveFocus(shape = RoundedCornerShape(20.dp)),
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp).fillMaxWidth(),
@@ -4100,6 +4116,7 @@ private fun EqualizerSheet(
                             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                             onPickPreset(preset.name)
                         },
+                        modifier = Modifier.tvAdaptiveFocus(),
                         label = { Text(preset.name, style = MaterialTheme.typography.labelMedium) },
                     )
                 }
@@ -4513,7 +4530,9 @@ private fun YouTubeChannelSheet(
                                 },
                                 shape = RoundedCornerShape(16.dp),
                                 color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceContainerHigh,
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .tvAdaptiveFocus(shape = RoundedCornerShape(16.dp)),
                             ) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -4635,7 +4654,9 @@ private fun YouTubeLibraryVisibilitySheet(
                             },
                             shape = RoundedCornerShape(16.dp),
                             color = if (isShown) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .tvAdaptiveFocus(shape = RoundedCornerShape(16.dp)),
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),

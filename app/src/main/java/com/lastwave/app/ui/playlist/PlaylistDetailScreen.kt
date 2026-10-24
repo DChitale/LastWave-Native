@@ -140,6 +140,7 @@ import com.lastwave.app.ui.common.adaptiveContentWidth
 import com.lastwave.app.ui.shell.FloatingNavDefaults
 import com.lastwave.app.ui.theme.ArtworkShape
 import com.lastwave.app.ui.theme.ExpressivePillShape
+import com.lastwave.app.ui.tv.focus.tvAdaptiveFocus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -532,6 +533,7 @@ fun PlaylistDetailScreen(
                                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f),
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                                 tonalElevation = 2.dp,
+                                modifier = Modifier.tvAdaptiveFocus(shape = RoundedCornerShape(50)),
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
@@ -1372,6 +1374,7 @@ private fun NativeTrackRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .tvAdaptiveFocus(shape = RoundedCornerShape(14.dp))
                 .combinedClickable(
                     interactionSource = interactionSource,
                     indication = null,
